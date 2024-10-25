@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password and Email Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            animation: backgroundAnimation 10s infinite alternate;
+        }
+
+        @keyframes backgroundAnimation {
+            0% { background: linear-gradient(to right, #4facfe, #00f2fe); }
+            100% { background: linear-gradient(to right, #00f2fe, #4facfe); }
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-around;
+            width: 80%;
+            max-width: 1200px;
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .generator {
+            margin: 0 20px;
+        }
+
+        #password, #email {
+            margin-top: 10px;
+            font-size: 1.5em;
+            color: #333;
+            transition: transform 0.3s;
+        }
+
+        #password:hover, #email:hover {
+            transform: scale(1.1);
+        }
+
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 1000;
+        }
+
+        .popup.active {
+            display: block;
+        }
+
+        .close-btn {
+            cursor: pointer;
+            color: #ffcc00;
+            font-weight: bold;
+        }
+
+        .copy-btn, .auto-generate-btn, .stop-btn {
+            margin-top: 10px;
+            padding: 10px 15px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .copy-btn:hover, .auto-generate-btn:hover, .stop-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="generator">
+            <h1>Password Generator</h1>
+            <label for="length">Password Length:</label>
+            <input type="number" id="length" value="12" min="1" max="128">
+            <button id="generatePassword">Generate Password</button>
+            <button class="auto-generate-btn" id="autoGeneratePassword">Auto Generate Password</button>
+            <button class="stop-btn" id="stopAutoGeneratePassword" style="display: none;">Stop Auto Generate</button>
+            <div id="password"></div>
+            <button class="copy-btn" id="copyPasswordButton" style="display: none;">Copy Password</button>
+        </div>
+
+        <div class="generator">
+            <h1>Email Generator</h1>
+            <label for="emailLength">Email Length:</label>
+            <input type="number" id="emailLength" value="10" min="1" max="20">
+            <button id="generateEmail">Generate Email</button>
+            <button class="auto-generate-btn" id="autoGenerateEmail">Auto Generate Email</button>
+            <button class="stop-btn" id="stopAutoGenerateEmail" style="display: none;">Stop Auto Generate</button>
+            <div id="email"></div>
+            <button class="copy-btn" id="copyEmailButton" style="display: none;">Copy Email</button >
+        </div>
+
+        <div class="popup" id="popup">
+            <p id="popupMessage"></p>
+            <span class="close-btn" id="closePopup">Close</span>
+        </div>
+    </div>
+
+    <script>
+        let passwordInterval;
+        let emailInterval;
+
+        // Password Generator
+        document.getElementById('generatePassword').addEventListener('click', function() {
+            const length = document.getElementById('length').value;
+            const password = generatePassword(length);
+            document.getElementById('password').textContent = password;
+            document.getElementById('copyPasswordButton').style.display = 'inline-block'; // Show copy button
+            showPopup(`Generated Password : ${password}`);
+        });
+
+        function generatePassword(length) {
+            const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+[]{}|;:,.<>?";
+            let password = "";
+            for (let i = 0; i < length; i++) {
+                const randomIndex = Math.floor(Math.random() * charset.length);
+                password += charset[randomIndex];
+            }
+            return password;
+        }
+
+        // Email Generator
+        document.getElementById('generateEmail').addEventListener('click', function() {
+            const length = document.getElementById('emailLength').value;
+            const email = generateEmail(length);
+            document.getElementById('email').textContent = email;
+            document.getElementById('copyEmailButton').style.display = 'inline-block'; // Show copy button
+            showPopup(`Generated Email: ${email}`);
+        });
+
+        function generateEmail(length) {
+            const charset = "abcdefghijklmnopqrstuvwxyz";
+            let localPart = "";
+            for (let i = 0; i < length; i++) {
+                const randomIndex = Math.floor(Math.random() * charset.length);
+                localPart += charset[randomIndex];
+            }
+            const domain = getRandomDomain();
+            return `${localPart}@${domain}`;
+        }
+
+        function getRandomDomain() {
+            const domains = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com"];
+            const randomIndex = Math.floor(Math.random() * domains.length);
+            return domains[randomIndex];
+        }
+
+        // Auto Generate Functionality
+        document.getElementById('autoGeneratePassword').addEventListener('click', function() {
+            const length = document.getElementById('length').value;
+            passwordInterval = setInterval(() => {
+                const password = generatePassword(length);
+                document.getElementById('password').textContent = password;
+                showPopup(`Generated Password : ${password}`);
+            }, 2000); // Generate password every 2 seconds
+            document.getElementById('autoGeneratePassword').style.display = 'none'; // Hide auto generate button
+            document.getElementById('stopAutoGeneratePassword').style.display = 'inline-block'; // Show stop auto generate button
+        });
+
+        document.getElementById('autoGenerateEmail').addEventListener('click', function() {
+            const length = document.getElementById('emailLength').value;
+            emailInterval = setInterval(() => {
+                const email = generateEmail(length);
+                document.getElementById('email').textContent = email;
+                showPopup(`Generated Email: ${email}`);
+            }, 2000); // Generate email every 2 seconds
+            document.getElementById('autoGenerateEmail').style.display = 'none'; // Hide auto generate button
+            document.getElementById('stopAutoGenerateEmail').style.display = 'inline-block'; // Show stop auto generate button
+        });
+
+        // Stop Auto Generate Functionality
+        document.getElementById('stopAutoGeneratePassword').addEventListener('click', function() {
+            clearInterval(passwordInterval);
+            document.getElementById('stopAutoGeneratePassword').style.display = 'none'; // Hide stop auto generate button
+            document.getElementById('autoGeneratePassword').style.display = 'inline-block'; // Show auto generate button
+        });
+
+        document.getElementById('stopAutoGenerateEmail').addEventListener('click', function() {
+            clearInterval(emailInterval);
+            document.getElementById('stopAutoGenerateEmail').style.display = 'none'; // Hide stop auto generate button
+            document.getElementById('autoGenerateEmail').style.display = 'inline-block'; // Show auto generate button
+        });
+
+        // Copy Functionality
+        document.getElementById('copyPasswordButton').addEventListener('click', function() {
+            const password = document.getElementById('password').textContent;
+            navigator.clipboard.writeText(password).then(() => {
+                showPopup('Password copied to clipboard!');
+            }).catch((error) => {
+                showPopup('Error copying password to clipboard: ' + error);
+            });
+        });
+
+        document.getElementById('copyEmailButton').addEventListener('click', function() {
+            const email = document.getElementById('email').textContent;
+            navigator.clipboard.writeText(email).then(() => {
+                showPopup('Email copied to clipboard!');
+            }).catch((error) => {
+                showPopup('Error copying email to clipboard: ' + error);
+            });
+        });
+
+        // Popup Functionality
+        function showPopup(message) {
+            const popup = document.getElementById('popup');
+            const popupMessage = document.getElementById('popupMessage');
+            popupMessage.textContent = message;
+            popup.classList.add ('active');
+        }
+
+        document.getElementById('closePopup').addEventListener('click', function() {
+            const popup = document.getElementById('popup');
+            popup.classList.remove('active');
+        });
+    </script>
+</body>
+</html>
